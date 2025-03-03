@@ -53,12 +53,3 @@ This project is a desktop puzzle game developed in Java using JavaFX. The game c
 
 - Java
 - JavaFX
-
-### Author
-
-[Your Name]
-
-### License
-
-This project is licensed under the MIT License.
-
