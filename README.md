@@ -1,263 +1,64 @@
-# Pipe_puzzle
-package com.example.pipedeneme;
-import javafx.scene.control.Label;
+## Pipe Puzzle Game
 
+This project is a desktop puzzle game developed in Java using JavaFX. The game consists of pipes that need to be connected in the correct order to create a continuous flow from the start point to the end point.
 
-import java.io.*;
-import java.util.Formatter;
+### How the Game Works
 
+1. **Game Initialization:**
 
+   - The game loads map data from a CSV file where each cell is represented by type and property values.
+   - The grid is a 4x4 matrix of `Tiles`.
 
-class Game {
+2. **Tile Types:**
 
-    public Label moveCounter;
-    private Tiles[][] board;
+   - `Starter`: Represents the starting pipe where the flow begins.
+   - `End`: Represents the ending pipe where the flow should reach.
+   - `Pipe`: Movable pipes that players can drag and swap.
+   - `PipeStatic`: Fixed pipes that cannot be moved.
 
-    public int numberOfUnlockedLevel;
+3. **Gameplay Features:**
 
-    public Game(){
-        numberOfUnlockedLevel=0;
+   - The player can drag pipes to adjacent empty cells.
+   - Pipes can only be moved if they are not static or starter/end tiles.
+   - The game automatically checks if the pipes are connected correctly from the start to the end.
 
-        board=new Tiles[4][4];
+4. **Saving and Loading Progress:**
 
-    }
+   - The game progress is saved to `save.dat`.
+   - When the game is restarted, the number of unlocked levels is loaded from the file.
 
-    public void createMapData(String inputFilePath) {
-        BufferedReader br = null;
-        String line = "";
-        try {
-            br = new BufferedReader(new FileReader(inputFilePath));
-            int i = 0;
-            while ((line = br.readLine()) != null) {
-                String[] info = line.split(",");
-                try {
-                    Tiles cellData = new Tiles(Integer.parseInt(info[0]), info[1], info[2]);
+5. **Move Counter:**
 
-                    board[i % 4][i / 4] =cellData;
-                    i++;
-                } catch (NumberFormatException e) {
-                    System.out.printf("Error at line -> %s\n", line);
-                    System.out.println(e.getMessage());
-                }
-            }
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            if (br != null) {
-                try {
-                    br.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-    }
+   - Each move made by the player is counted and displayed using a `Label` component.
 
-    //checks the legality of the drag gesture.
-    public boolean isLegal(int x0,int y0,int x1,int y1){
-        if(board[x0][y0].type.equalsIgnoreCase("Starter")||board[x0][y0].type.equalsIgnoreCase("End")||board[x0][y0].type.equalsIgnoreCase("PipeStatic")||board[x0][y0].property.equalsIgnoreCase("Free")){
-            return false;
-        }else{
-            if(board[x1][y1].property.equalsIgnoreCase("Free")){
-                return (Math.abs(x0-x1)==1 && Math.abs(y0-y1)==0)||(Math.abs(y0-y1)==1 && Math.abs(x0-x1)==0);
-            }else{
-                return false;
-            }
-        }
-    }
-    //This method creates the new level.
+### How to Run the Project
 
+1. Clone the repository.
+2. Install Java and JavaFX.
+3. Compile and run the project using your preferred IDE.
 
-    public void makeMove(int x0,int y0,int x1,int y1){
-        Tiles temp = board[x0][y0];
-        board[x0][y0] = board[x1][y1];
-        board[x1][y1] = temp;
-    }
-    public void loadGame(){
-        File f = new File("save.dat");
-        if(f.exists()){
-            try{
-                BufferedReader b = new BufferedReader(new FileReader("save.dat"));
-                numberOfUnlockedLevel=b.read() - ((int) '0');
-            }catch(FileNotFoundException e){
-                e.printStackTrace();
-            }catch (IOException e){
-                e.printStackTrace();
-            }
-        }else{
-            numberOfUnlockedLevel=0;
-        }
-    }
-    public void saveGame() {
-        try {
-            File f = new File("save.dat");
-            Formatter fo = new Formatter(f);
-            fo.format("%d", numberOfUnlockedLevel);
-            fo.close();
-        }catch (IOException e){
-            e.printStackTrace();
-        }
-    }
-    //this method checks that the level has been completed correctly
-    public boolean checkOver(){
-        int x0 = 0 ,y0 = 0;
-        int x1,y1;
-        boolean result=true;
-        //this loop finds the position of the starting rectangle.
-        while(!board[x0][y0].type.equalsIgnoreCase("Starter")){
-            x0++;
-            if(x0>=4){
-                y0++;
-                x0 = 0;
-            }
-        }
-        if(board[x0][y0].property.equalsIgnoreCase("Vertical")) {
-            x1 = x0;
-            y1 = y0 + 1;
-        }else{
-            x1 = x0 - 1;
-            y1 = y0;
-        }
-        //this loop is broken when it reaches its end point.
-        while(true) {
-            //We use these variables to understand from which direction the ball enters the rectangle.
-            int deltaX = x1 - x0;
-            int deltaY = y1 - y0;
-            Tiles currentCell = board[x1][y1];
-            if (currentCell.type.equalsIgnoreCase("Pipe")||currentCell.type.equalsIgnoreCase("PipeStatic")) {
-                if (currentCell.property.equalsIgnoreCase("00")) {
-                    if (deltaY==1) {
-                        y0 = y1;
-                        x0 = x1--;
-                    }
-                    else if(deltaX==1){
-                        y0 = y1--;
-                        x0 = x1;
-                    }
-                    else {
-                        result=false;
-                        break;
-                    }
-                }
-                else if (currentCell.property.equalsIgnoreCase("01")) {
-                    if (deltaY==1) {
-                        y0 = y1;
-                        x0 = x1++;
-                    }
-                    else if(deltaX==-1){
-                        y0=y1--;
-                        x0=x1;
-                    }
-                    else {
-                        result= false;
-                        break;
-                    }
-                }
-                else if (currentCell.property.equalsIgnoreCase("10")) {
-                    if(deltaX==1) {
-                        y0=y1++;
-                        x0=x1;
-                    }
-                    else if(deltaY==-1){
-                        y0 = y1;
-                        x0 = x1--;
-                    }
-                    else {
-                        result= false;
-                        break;
-                    }
-                }
-                else if (currentCell.property.equalsIgnoreCase("11")) {
-                    if(deltaY==-1) {
-                        y0 = y1;
-                        x0 = x1++;
-                    }
-                    else if(deltaX==-1){
-                        y0 = y1++;
-                        x0 = x1;
-                    }
-                    else {
-                        result= false;
-                        break;
-                    }
-                }
-                else if (currentCell.property.equalsIgnoreCase("Horizontal")) {
-                    if(deltaX==1) {
-                        x0=x1++;
-                        y0=y1;
-                    }
-                    else if(deltaX==-1){
-                        x0=x1--;
-                        y0=y1;
-                    }
-                    else {
-                        result= false;
-                        break;
-                    }
-                }
-                else {
-                    if(deltaY==1) {
-                        y0=y1++;
-                        x0=x1;
-                    }
-                    else if (deltaY==-1){
-                        y0=y1--;
-                        x0=x1;
-                    }
-                    else {
-                        result=false;
-                        break;
-                    }
-                }
-            }
-            else if(currentCell.type.equalsIgnoreCase("End")){
-                if(deltaX==1 && currentCell.property.equalsIgnoreCase("Horizontal")){
-                    break;
-                }
-                else if(deltaY==-1 && currentCell.property.equalsIgnoreCase("Vertical")){
-                    break;
-                }
-                else{
-                    result=false;
-                    break;
-                }
-            }
-            else{
-                result=false;
-                break;
-            }
+### Folder Structure
 
-        }
-        return result;
+```
+|-- src
+|   |-- com/example/pipedeneme
+|       |-- Game.java       # Game logic
+|       |-- Tiles.java      # Tile data class
+|       |-- Controller.java # Game controller
+|-- save.dat                # Save file for unlocked levels
+|-- mapData.csv             # Map data for levels
+```
 
+### Technologies Used
 
-    }
+- Java
+- JavaFX
 
-    public Label getMoveCounter() {
-        return moveCounter;
-    }
+### Author
 
-    public void setMoveCounter(Label moveCounter) {
-        this.moveCounter = moveCounter;
-    }
+[Your Name]
 
-    public Tiles[][] getBoard() {
-        return board;
-    }
+### License
 
-    public void setBoard(Tiles[][] board) {
-        this.board = board;
-    }
+This project is licensed under the MIT License.
 
-    public int getNumberOfUnlockedLevel() {
-        return numberOfUnlockedLevel;
-    }
-
-    public void setNumberOfUnlockedLevel(int numberOfUnlockedLevel) {
-        this.numberOfUnlockedLevel = numberOfUnlockedLevel;
-    }
-
-
-}
